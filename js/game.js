@@ -2,8 +2,10 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        this.canvas.width = 1280;
-        this.canvas.height = 960;
+        
+        // Set canvas size based on screen size
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
         
         // Game state
         this.score = 0;
@@ -21,6 +23,12 @@ class Game {
         
         // Input handling
         this.keys = {};
+        this.touchControls = {
+            left: false,
+            right: false,
+            jump: false,
+            shoot: false
+        };
         this.setupInputHandlers();
         
         // Start game loop
@@ -35,7 +43,40 @@ class Game {
         requestAnimationFrame(this.gameLoop.bind(this));
     }
     
+    resizeCanvas() {
+        // Get the container size
+        const container = this.canvas.parentElement;
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        
+        // Calculate the scale to fit the game while maintaining aspect ratio
+        const gameAspectRatio = 1280 / 960;
+        const containerAspectRatio = containerWidth / containerHeight;
+        
+        let width, height;
+        if (containerAspectRatio > gameAspectRatio) {
+            // Container is wider than game
+            height = containerHeight;
+            width = height * gameAspectRatio;
+        } else {
+            // Container is taller than game
+            width = containerWidth;
+            height = width / gameAspectRatio;
+        }
+        
+        // Set canvas size
+        this.canvas.style.width = `${width}px`;
+        this.canvas.style.height = `${height}px`;
+        this.canvas.width = 1280;
+        this.canvas.height = 960;
+        
+        // Calculate scale for touch controls
+        this.scaleX = width / 1280;
+        this.scaleY = height / 960;
+    }
+    
     setupInputHandlers() {
+        // Keyboard controls
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             this.keys[key] = true;
@@ -52,11 +93,55 @@ class Game {
             this.keys[key] = false;
         });
         
-        this.canvas.addEventListener('click', (e) => {
+        // Touch controls
+        const touchControls = document.getElementById('touch-controls');
+        
+        // Movement controls
+        touchControls.querySelector('.left-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.touchControls.left = true;
+        });
+        touchControls.querySelector('.left-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.touchControls.left = false;
+        });
+        
+        touchControls.querySelector('.right-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.touchControls.right = true;
+        });
+        touchControls.querySelector('.right-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.touchControls.right = false;
+        });
+        
+        // Jump button
+        touchControls.querySelector('.jump-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.touchControls.jump = true;
+        });
+        touchControls.querySelector('.jump-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.touchControls.jump = false;
+        });
+        
+        // Shoot button
+        touchControls.querySelector('.shoot-btn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            this.touchControls.shoot = true;
             if (!this.gameOver && !this.paused) {
                 this.player.shoot();
             }
         });
+        touchControls.querySelector('.shoot-btn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            this.touchControls.shoot = false;
+        });
+        
+        // Prevent default touch behavior on game canvas
+        this.canvas.addEventListener('touchstart', (e) => e.preventDefault());
+        this.canvas.addEventListener('touchmove', (e) => e.preventDefault());
+        this.canvas.addEventListener('touchend', (e) => e.preventDefault());
     }
     
     loadLevel(levelNumber) {
@@ -133,9 +218,12 @@ class Game {
         // Player-Enemy collisions
         this.enemies.forEach(enemy => {
             if (this.player.checkCollision(enemy)) {
-                this.player.takeDamage();
-                if (this.player.health <= 0) {
-                    this.gameOver = true;
+                // Only take damage if enemy is not jumping or if player is above enemy
+                if (!enemy.isJumping || this.player.y + this.player.height < enemy.y + enemy.height * 0.7) {
+                    this.player.takeDamage();
+                    if (this.player.health <= 0) {
+                        this.gameOver = true;
+                    }
                 }
             }
         });
@@ -209,10 +297,16 @@ class Game {
         this.ctx.fillStyle = '#fff';
         this.ctx.font = '48px "Press Start 2P"';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2);
+        this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 50);
         
         this.ctx.font = '24px "Press Start 2P"';
-        this.ctx.fillText('Press R to Restart', this.canvas.width / 2, this.canvas.height / 2 + 50);
+        this.ctx.fillText('Press R or tap to Restart', this.canvas.width / 2, this.canvas.height / 2 + 50);
+        
+        // Add restart button for mobile
+        const restartBtn = document.getElementById('restart-btn');
+        if (restartBtn) {
+            restartBtn.style.display = 'block';
+        }
     }
     
     showWinScreen() {
@@ -276,6 +370,7 @@ class PowerUp {
                 break;
             case 'golden_banana':
                 player.addLife();
+                player.heal(2);
                 break;
             case 'fire_flower':
                 player.enableFire(7000);
@@ -342,9 +437,25 @@ window.addEventListener('load', () => {
     const startOverlay = document.getElementById('start-overlay');
     const gameContainer = document.querySelector('.game-container');
     const startBtn = document.getElementById('start-btn');
-    startBtn.addEventListener('click', () => {
+    const restartBtn = document.getElementById('restart-btn');
+    
+    const startGame = () => {
         startOverlay.style.display = 'none';
         gameContainer.style.display = 'block';
         new Game();
+    };
+    
+    startBtn.addEventListener('click', startGame);
+    
+    // Add keyboard shortcut for 'S' key
+    window.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 's' && startOverlay.style.display !== 'none') {
+            startGame();
+        }
+    });
+    
+    // Add restart button functionality
+    restartBtn.addEventListener('click', () => {
+        window.location.reload();
     });
 }); 

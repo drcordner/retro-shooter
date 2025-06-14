@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Andrejs vs Godzilla: Retro Shooter</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
@@ -18,6 +18,17 @@
             <div id="health">Health: <span id="livesValue">3</span></div>
             <div id="level">Level: <span id="levelValue">1</span></div>
         </div>
+        <div id="touch-controls">
+            <div class="movement-controls">
+                <button class="left-btn">←</button>
+                <button class="right-btn">→</button>
+            </div>
+            <div class="action-controls">
+                <button class="jump-btn">↑</button>
+                <button class="shoot-btn">Z</button>
+            </div>
+        </div>
+        <button id="restart-btn" style="display: none;">Restart Game</button>
     </div>
 
     <!-- Game Scripts -->

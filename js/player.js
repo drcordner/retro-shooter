@@ -37,22 +37,22 @@ class Player {
         // Convert deltaTime to seconds
         const dt = deltaTime / 1000;
         
-        // Handle horizontal movement
-        if (keys['ArrowLeft'] || keys['a']) {
+        // Handle horizontal movement (keyboard and touch)
+        if (keys['ArrowLeft'] || keys['a'] || this.game.touchControls.left) {
             this.velocityX = -this.speed;
             this.facingRight = false;
-        } else if (keys['ArrowRight'] || keys['d']) {
+        } else if (keys['ArrowRight'] || keys['d'] || this.game.touchControls.right) {
             this.velocityX = this.speed;
             this.facingRight = true;
         } else {
             this.velocityX = 0;
         }
         
-        // Handle jumping
-        if ((keys['ArrowUp'] || keys[' '] || keys['w']) && !this.isJumping) {
+        // Handle jumping (keyboard and touch)
+        if ((keys['ArrowUp'] || keys[' '] || keys['w'] || this.game.touchControls.jump) && !this.isJumping) {
             this.velocityY = this.jumpForce;
             this.isJumping = true;
-        } else if ((keys['ArrowUp'] || keys[' '] || keys['w']) && this.isJumping && !this.isDoubleJumping) {
+        } else if ((keys['ArrowUp'] || keys[' '] || keys['w'] || this.game.touchControls.jump) && this.isJumping && !this.isDoubleJumping) {
             this.velocityY = this.jumpForce * 0.8;
             this.isDoubleJumping = true;
         }
