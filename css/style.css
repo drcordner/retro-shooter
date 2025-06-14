@@ -110,19 +110,23 @@ body {
 
 /* Touch Controls */
 #touch-controls {
-    position: absolute;
-    bottom: 20px;
+    position: fixed;
+    bottom: 40px;
     left: 0;
     width: 100%;
     display: flex;
     justify-content: space-between;
     padding: 0 20px;
     z-index: 1000;
+    pointer-events: auto;
 }
 
 .movement-controls, .action-controls {
     display: flex;
     gap: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px;
+    border-radius: 20px;
 }
 
 #touch-controls button {
@@ -139,7 +143,10 @@ body {
     -webkit-user-select: none;
     touch-action: manipulation;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    transition: background 0.1s;
+    transition: all 0.1s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #touch-controls button:active {
@@ -174,6 +181,7 @@ body {
     
     .movement-controls, .action-controls {
         gap: 15px;
+        padding: 8px;
     }
 }
 

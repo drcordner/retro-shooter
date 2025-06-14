@@ -462,6 +462,14 @@ window.addEventListener('load', () => {
     const gameContainer = document.querySelector('.game-container');
     const startBtn = document.getElementById('start-btn');
     const restartBtn = document.getElementById('restart-btn');
+    const touchControls = document.getElementById('touch-controls');
+    
+    // Show touch controls on mobile devices
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+        touchControls.style.display = 'flex';
+    } else {
+        touchControls.style.display = 'none';
+    }
     
     const startGame = () => {
         startOverlay.style.display = 'none';
