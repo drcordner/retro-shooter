@@ -465,8 +465,23 @@ window.addEventListener('load', () => {
     const touchControls = document.getElementById('touch-controls');
     
     // Show touch controls on mobile devices
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+    
+    if (isMobile) {
         touchControls.style.display = 'flex';
+        // Force touch controls to stay visible
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    touchControls.style.display = 'flex';
+                }
+            });
+        });
+        
+        observer.observe(touchControls, {
+            attributes: true,
+            attributeFilter: ['style']
+        });
     } else {
         touchControls.style.display = 'none';
     }
@@ -474,6 +489,9 @@ window.addEventListener('load', () => {
     const startGame = () => {
         startOverlay.style.display = 'none';
         gameContainer.style.display = 'block';
+        if (isMobile) {
+            touchControls.style.display = 'flex';
+        }
         new Game();
     };
     
