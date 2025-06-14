@@ -118,54 +118,87 @@ class Game {
         // Left button
         leftBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.touchControls.left = true;
+            console.log('Left button pressed');
             vibrate(50);
         });
+        
         leftBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.touchControls.left = false;
+            console.log('Left button released');
         });
         
         // Right button
         rightBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.touchControls.right = true;
+            console.log('Right button pressed');
             vibrate(50);
         });
+        
         rightBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.touchControls.right = false;
+            console.log('Right button released');
         });
         
         // Jump button
         jumpBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.touchControls.jump = true;
+            console.log('Jump button pressed');
             vibrate(50);
         });
+        
         jumpBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.touchControls.jump = false;
+            console.log('Jump button released');
         });
         
         // Shoot button
         shootBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.touchControls.shoot = true;
             if (!this.gameOver && !this.paused) {
                 this.player.shoot();
+                console.log('Shoot button pressed');
                 vibrate(50);
             }
         });
+        
         shootBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
+            e.stopPropagation();
             this.touchControls.shoot = false;
+            console.log('Shoot button released');
         });
         
         // Prevent default touch behavior on game canvas
         this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
         this.canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
         this.canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+        
+        // Add touchcancel handlers
+        [leftBtn, rightBtn, jumpBtn, shootBtn].forEach(btn => {
+            btn.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.touchControls.left = false;
+                this.touchControls.right = false;
+                this.touchControls.jump = false;
+                this.touchControls.shoot = false;
+                console.log('Touch cancelled');
+            });
+        });
     }
     
     loadLevel(levelNumber) {
