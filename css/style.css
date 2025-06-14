@@ -47,11 +47,12 @@ body {
 }
 
 #ui-overlay > div {
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.7);
     padding: 8px 16px;
     border: 2px solid #fff;
     border-radius: 4px;
     white-space: nowrap;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 
 /* Retro-style UI elements */
@@ -71,10 +72,11 @@ body {
     font-size: 48px;
     font-family: 'Press Start 2P', system-ui, -apple-system, sans-serif;
     color: #fff;
-    background: #222;
+    background: rgba(34, 34, 34, 0.9);
     padding: 24px 0 16px 0;
     z-index: 1001;
     letter-spacing: 2px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
 #start-overlay {
@@ -152,17 +154,25 @@ body {
         flex-direction: row;
         justify-content: space-between;
         flex-wrap: wrap;
+        gap: 5px;
     }
     
     #ui-overlay > div {
         padding: 6px 12px;
         font-size: 20px;
+        background-color: rgba(0, 0, 0, 0.8);
+        border-width: 3px;
     }
     
     #touch-controls button {
         width: 60px;
         height: 60px;
         font-size: 24px;
+    }
+    
+    #title-bar {
+        font-size: 32px;
+        padding: 16px 0 12px 0;
     }
 }
 
@@ -187,6 +197,11 @@ body {
     
     .movement-controls, .action-controls {
         gap: 10px;
+    }
+    
+    #title-bar {
+        font-size: 24px;
+        padding: 12px 0 8px 0;
     }
 }
 
