@@ -96,52 +96,76 @@ class Game {
         // Touch controls
         const touchControls = document.getElementById('touch-controls');
         
+        // Prevent default touch behaviors
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.closest('#touch-controls')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (e.target.closest('#touch-controls')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+        
         // Movement controls
-        touchControls.querySelector('.left-btn').addEventListener('touchstart', (e) => {
+        const leftBtn = touchControls.querySelector('.left-btn');
+        const rightBtn = touchControls.querySelector('.right-btn');
+        const jumpBtn = touchControls.querySelector('.jump-btn');
+        const shootBtn = touchControls.querySelector('.shoot-btn');
+        
+        // Left button
+        leftBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.touchControls.left = true;
+            vibrate(50);
         });
-        touchControls.querySelector('.left-btn').addEventListener('touchend', (e) => {
+        leftBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
             this.touchControls.left = false;
         });
         
-        touchControls.querySelector('.right-btn').addEventListener('touchstart', (e) => {
+        // Right button
+        rightBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.touchControls.right = true;
+            vibrate(50);
         });
-        touchControls.querySelector('.right-btn').addEventListener('touchend', (e) => {
+        rightBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
             this.touchControls.right = false;
         });
         
         // Jump button
-        touchControls.querySelector('.jump-btn').addEventListener('touchstart', (e) => {
+        jumpBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.touchControls.jump = true;
+            vibrate(50);
         });
-        touchControls.querySelector('.jump-btn').addEventListener('touchend', (e) => {
+        jumpBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
             this.touchControls.jump = false;
         });
         
         // Shoot button
-        touchControls.querySelector('.shoot-btn').addEventListener('touchstart', (e) => {
+        shootBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.touchControls.shoot = true;
             if (!this.gameOver && !this.paused) {
                 this.player.shoot();
+                vibrate(50);
             }
         });
-        touchControls.querySelector('.shoot-btn').addEventListener('touchend', (e) => {
+        shootBtn.addEventListener('touchend', (e) => {
             e.preventDefault();
             this.touchControls.shoot = false;
         });
         
         // Prevent default touch behavior on game canvas
-        this.canvas.addEventListener('touchstart', (e) => e.preventDefault());
-        this.canvas.addEventListener('touchmove', (e) => e.preventDefault());
-        this.canvas.addEventListener('touchend', (e) => e.preventDefault());
+        this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+        this.canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        this.canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
     }
     
     loadLevel(levelNumber) {
