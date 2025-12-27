@@ -94,6 +94,17 @@ body {
     100% { transform: scale(1); }
 }
 
+#version {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 14px;
+    font-family: 'Press Start 2P', monospace;
+    z-index: 100;
+    pointer-events: none;
+}
+
 #title-bar {
     position: absolute;
     top: 0;

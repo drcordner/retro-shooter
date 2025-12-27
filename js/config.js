@@ -1,5 +1,8 @@
 // Game Configuration
 const CONFIG = {
+    // Version
+    VERSION: '1.2.0',
+
     // Canvas settings
     CANVAS_WIDTH: 1280,
     CANVAS_HEIGHT: 960,
