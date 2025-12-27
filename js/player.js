@@ -10,7 +10,7 @@ class Player {
         this.speed = 400;
         this.jumpForce = -800;
         this.gravity = 1600;
-        this.health = 3;
+        this.health = 5;
         this.isJumping = false;
         this.isDoubleJumping = false;
         this.facingRight = true;
