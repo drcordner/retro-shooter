@@ -327,9 +327,18 @@ class Projectile {
         this.damage = poweredUp ? 2 : 1;
         this.destroyed = false;
         this.color = poweredUp ? '#FFD700' : '#FFFF00';
+        this.poweredUp = poweredUp;
+        this.trail = [];
+        this.trailLength = 5;
     }
 
     update(deltaTime) {
+        // Add current position to trail
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > this.trailLength) {
+            this.trail.shift();
+        }
+
         const dt = deltaTime / 1000;
         this.x += this.speed * this.direction * dt;
         // Remove if off screen
@@ -346,8 +355,36 @@ class Projectile {
     }
 
     draw(ctx) {
+        ctx.save();
+
+        // Draw trail
+        this.trail.forEach((pos, index) => {
+            const alpha = (index + 1) / this.trail.length * 0.5;
+            const size = (index + 1) / this.trail.length;
+            ctx.fillStyle = this.poweredUp ? `rgba(255, 215, 0, ${alpha})` : `rgba(255, 255, 0, ${alpha})`;
+            ctx.fillRect(
+                pos.x + this.width * (1 - size) / 2,
+                pos.y + this.height * (1 - size) / 2,
+                this.width * size,
+                this.height * size
+            );
+        });
+
+        // Draw main projectile with glow
+        if (this.poweredUp) {
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 10;
+        }
+
+        // Main projectile body
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        // Add highlight
+        ctx.fillStyle = this.poweredUp ? '#FFFF00' : '#FFFFFF';
+        ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, 4);
+
+        ctx.restore();
     }
 
     destroy() {

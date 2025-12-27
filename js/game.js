@@ -9,6 +9,7 @@ class Game {
 
         // Game state
         this.score = 0;
+        this.highScore = parseInt(localStorage.getItem('highScore') || '0');
         this.lives = 3;
         this.currentLevel = 1;
         this.gameOver = false;
@@ -17,6 +18,9 @@ class Game {
         this.damageFlash = 0;
         this.levelTransitionMessage = '';
         this.levelTransitionAlpha = 0;
+
+        // Display initial high score
+        document.getElementById('highScoreValue').textContent = this.highScore;
 
         // Initialize game objects
         this.player = new Player(this);
@@ -28,6 +32,10 @@ class Game {
         // Initialize particle system and sound manager
         this.particleSystem = new ParticleSystem(this);
         this.soundManager = new SoundManager();
+
+        // Background stars for parallax effect
+        this.stars = [];
+        this.initializeStars();
 
         // Input handling
         this.keys = {};
@@ -56,11 +64,11 @@ class Game {
         const container = this.canvas.parentElement;
         const containerWidth = container.clientWidth;
         const containerHeight = container.clientHeight;
-        
+
         // Calculate the scale to fit the game while maintaining aspect ratio
         const gameAspectRatio = 1280 / 960;
         const containerAspectRatio = containerWidth / containerHeight;
-        
+
         let width, height;
         if (containerAspectRatio > gameAspectRatio) {
             // Container is wider than game
@@ -71,16 +79,50 @@ class Game {
             width = containerWidth;
             height = width / gameAspectRatio;
         }
-        
+
         // Set canvas size
         this.canvas.style.width = `${width}px`;
         this.canvas.style.height = `${height}px`;
         this.canvas.width = 1280;
         this.canvas.height = 960;
-        
+
         // Calculate scale for touch controls
         this.scaleX = width / 1280;
         this.scaleY = height / 960;
+    }
+
+    initializeStars() {
+        // Create three layers of stars for parallax effect
+        for (let i = 0; i < 100; i++) {
+            this.stars.push({
+                x: Math.random() * 1280,
+                y: Math.random() * 960,
+                size: Math.random() * 2 + 0.5,
+                speed: Math.random() * 0.3 + 0.1,
+                brightness: Math.random() * 0.5 + 0.5,
+                layer: 1
+            });
+        }
+        for (let i = 0; i < 50; i++) {
+            this.stars.push({
+                x: Math.random() * 1280,
+                y: Math.random() * 960,
+                size: Math.random() * 1.5 + 1,
+                speed: Math.random() * 0.5 + 0.3,
+                brightness: Math.random() * 0.3 + 0.4,
+                layer: 2
+            });
+        }
+        for (let i = 0; i < 30; i++) {
+            this.stars.push({
+                x: Math.random() * 1280,
+                y: Math.random() * 960,
+                size: Math.random() * 3 + 1.5,
+                speed: Math.random() * 0.8 + 0.5,
+                brightness: Math.random() * 0.4 + 0.6,
+                layer: 3
+            });
+        }
     }
     
     setupInputHandlers() {
@@ -254,6 +296,15 @@ class Game {
     update(deltaTime) {
         if (this.gameOver || this.paused) return;
 
+        // Update stars parallax
+        this.stars.forEach(star => {
+            star.x -= star.speed;
+            if (star.x < -10) {
+                star.x = 1280 + 10;
+                star.y = Math.random() * 960;
+            }
+        });
+
         // Update player
         this.player.update(deltaTime, this.keys, this.platforms);
 
@@ -373,9 +424,19 @@ class Game {
     }
     
     draw() {
-        // Clear canvas
-        this.ctx.fillStyle = '#000';
+        // Draw background gradient
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+        gradient.addColorStop(0, '#0a0a1a');
+        gradient.addColorStop(0.5, '#1a0a2e');
+        gradient.addColorStop(1, '#0f0520');
+        this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // Draw stars
+        this.stars.forEach(star => {
+            this.ctx.fillStyle = `rgba(255, 255, 255, ${star.brightness})`;
+            this.ctx.fillRect(star.x, star.y, star.size, star.size);
+        });
 
         // Draw platforms
         this.platforms.forEach(platform => platform.draw(this.ctx));
@@ -429,16 +490,34 @@ class Game {
     }
 
     drawGameOver() {
+        // Update high score if needed
+        if (this.score > this.highScore) {
+            this.highScore = this.score;
+            localStorage.setItem('highScore', this.highScore.toString());
+            document.getElementById('highScoreValue').textContent = this.highScore;
+        }
+
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         this.ctx.fillStyle = '#fff';
         this.ctx.font = '48px "Press Start 2P"';
         this.ctx.textAlign = 'center';
-        this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 50);
+        this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 100);
 
         this.ctx.font = '24px "Press Start 2P"';
-        this.ctx.fillText('Press R or tap to Restart', this.canvas.width / 2, this.canvas.height / 2 + 50);
+        this.ctx.fillText(`Score: ${this.score}`, this.canvas.width / 2, this.canvas.height / 2 - 20);
+
+        if (this.score === this.highScore && this.score > 0) {
+            this.ctx.fillStyle = '#ffd700';
+            this.ctx.fillText('NEW HIGH SCORE!', this.canvas.width / 2, this.canvas.height / 2 + 20);
+            this.ctx.fillStyle = '#fff';
+        } else {
+            this.ctx.fillText(`High Score: ${this.highScore}`, this.canvas.width / 2, this.canvas.height / 2 + 20);
+        }
+
+        this.ctx.font = '20px "Press Start 2P"';
+        this.ctx.fillText('Press R or tap to Restart', this.canvas.width / 2, this.canvas.height / 2 + 80);
 
         // Add restart button for mobile
         const restartBtn = document.getElementById('restart-btn');
@@ -551,48 +630,123 @@ class PowerUp {
         }
     }
     draw(ctx) {
+        ctx.save();
+
         switch (this.type) {
             case 'banana':
+                // Draw banana shape
                 ctx.fillStyle = '#ffe135';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.beginPath();
+                ctx.ellipse(this.x + 16, this.y + 16, 14, 8, Math.PI / 6, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.strokeStyle = '#b8860b';
-                ctx.strokeRect(this.x, this.y, this.width, this.height);
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Add banana stem
+                ctx.fillStyle = '#654321';
+                ctx.fillRect(this.x + 12, this.y + 8, 4, 6);
                 break;
+
             case 'golden_banana':
+                // Draw golden banana with glow
+                ctx.shadowColor = '#ffd700';
+                ctx.shadowBlur = 15;
                 ctx.fillStyle = '#ffd700';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                ctx.strokeStyle = '#b8860b';
-                ctx.strokeRect(this.x, this.y, this.width, this.height);
+                ctx.beginPath();
+                ctx.ellipse(this.x + 16, this.y + 16, 15, 9, Math.PI / 6, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#ff8c00';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Add sparkle effect
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(this.x + 20, this.y + 12, 3, 3);
                 break;
+
             case 'fire_flower':
+                // Draw flower with petals
                 ctx.fillStyle = '#ff4500';
+                for (let i = 0; i < 6; i++) {
+                    const angle = (Math.PI * 2 * i) / 6;
+                    ctx.beginPath();
+                    ctx.arc(this.x + 16 + Math.cos(angle) * 8, this.y + 16 + Math.sin(angle) * 8, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Center
+                ctx.fillStyle = '#ffd700';
                 ctx.beginPath();
-                ctx.arc(this.x + 16, this.y + 16, 16, 0, 2 * Math.PI);
+                ctx.arc(this.x + 16, this.y + 16, 6, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.stroke();
                 break;
+
             case 'speed_vine':
+                // Draw lightning bolt shape
                 ctx.fillStyle = '#32cd32';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-                ctx.strokeStyle = '#006400';
-                ctx.strokeRect(this.x, this.y, this.width, this.height);
-                break;
-            case 'shield_coconut':
-                ctx.fillStyle = '#8b4513';
                 ctx.beginPath();
-                ctx.arc(this.x + 16, this.y + 16, 16, 0, 2 * Math.PI);
+                ctx.moveTo(this.x + 16, this.y + 4);
+                ctx.lineTo(this.x + 12, this.y + 16);
+                ctx.lineTo(this.x + 18, this.y + 16);
+                ctx.lineTo(this.x + 14, this.y + 28);
+                ctx.lineTo(this.x + 20, this.y + 28);
+                ctx.lineTo(this.x + 16, this.y + 28);
+                ctx.lineTo(this.x + 22, this.y + 14);
+                ctx.lineTo(this.x + 18, this.y + 14);
+                ctx.closePath();
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
+                ctx.strokeStyle = '#006400';
+                ctx.lineWidth = 2;
                 ctx.stroke();
                 break;
-            case 'multi_shot':
+
+            case 'shield_coconut':
+                // Draw shield shape
                 ctx.fillStyle = '#00bfff';
-                ctx.fillRect(this.x, this.y, this.width, this.height);
+                ctx.beginPath();
+                ctx.moveTo(this.x + 16, this.y + 4);
+                ctx.lineTo(this.x + 28, this.y + 12);
+                ctx.lineTo(this.x + 28, this.y + 24);
+                ctx.lineTo(this.x + 16, this.y + 30);
+                ctx.lineTo(this.x + 4, this.y + 24);
+                ctx.lineTo(this.x + 4, this.y + 12);
+                ctx.closePath();
+                ctx.fill();
                 ctx.strokeStyle = '#fff';
-                ctx.strokeRect(this.x, this.y, this.width, this.height);
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                // Shield cross
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(this.x + 16, this.y + 10);
+                ctx.lineTo(this.x + 16, this.y + 24);
+                ctx.moveTo(this.x + 10, this.y + 17);
+                ctx.lineTo(this.x + 22, this.y + 17);
+                ctx.stroke();
+                break;
+
+            case 'multi_shot':
+                // Draw three arrows
+                const drawArrow = (offsetX, offsetY) => {
+                    ctx.beginPath();
+                    ctx.moveTo(this.x + offsetX, this.y + offsetY);
+                    ctx.lineTo(this.x + offsetX + 8, this.y + offsetY + 4);
+                    ctx.lineTo(this.x + offsetX, this.y + offsetY + 8);
+                    ctx.lineTo(this.x + offsetX + 2, this.y + offsetY + 4);
+                    ctx.closePath();
+                    ctx.fill();
+                };
+                ctx.fillStyle = '#00bfff';
+                drawArrow(8, 8);
+                drawArrow(12, 12);
+                drawArrow(16, 8);
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
                 break;
         }
+
+        ctx.restore();
     }
 }
 
