@@ -147,12 +147,15 @@ body {
     right: 0;
     display: flex;
     justify-content: space-between;
-    padding: 10px;
-    z-index: 1000;
+    align-items: flex-end;
+    padding: 15px;
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
+    z-index: 2000;
     pointer-events: auto;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.4));
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.7), transparent);
     -webkit-tap-highlight-color: transparent;
     touch-action: none;
+    min-height: 120px;
 }
 
 .movement-controls,
@@ -167,13 +170,14 @@ body {
 }
 
 #touch-controls button {
-    width: 60px;
-    height: 60px;
-    border: 2px solid white;
+    width: 70px;
+    height: 70px;
+    border: 3px solid white;
     border-radius: 50%;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(50, 50, 50, 0.85);
     color: white;
-    font-size: 24px;
+    font-size: 28px;
+    font-weight: bold;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -183,12 +187,14 @@ body {
     -webkit-tap-highlight-color: transparent;
     touch-action: none;
     position: relative;
-    z-index: 1001;
+    z-index: 2001;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
 }
 
 #touch-controls button:active {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.3);
     transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
 }
 
 #touch-controls button::after {
@@ -312,13 +318,13 @@ body {
 
 @media (max-width: 768px) {
     .game-container {
-        padding-bottom: 160px;
+        padding-bottom: 180px;
     }
 }
 
 @media (max-width: 480px) {
     .game-container {
-        padding-bottom: 140px;
+        padding-bottom: 160px;
     }
 }
 
