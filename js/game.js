@@ -2,25 +2,29 @@ class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
         this.ctx = this.canvas.getContext('2d');
-        
+
         // Set canvas size based on screen size
         this.resizeCanvas();
         window.addEventListener('resize', () => this.resizeCanvas());
-        
+
         // Game state
         this.score = 0;
         this.lives = 3;
         this.currentLevel = 1;
         this.gameOver = false;
         this.paused = false;
-        
+
         // Initialize game objects
         this.player = new Player(this);
         this.enemies = [];
         this.projectiles = [];
         this.platforms = [];
         this.powerUps = [];
-        
+
+        // Initialize particle system and sound manager
+        this.particleSystem = new ParticleSystem(this);
+        this.soundManager = new SoundManager();
+
         // Input handling
         this.keys = {};
         this.touchControls = {
@@ -30,15 +34,15 @@ class Game {
             shoot: false
         };
         this.setupInputHandlers();
-        
+
         // Start game loop
         this.lastTime = 0;
         this.accumulator = 0;
-        this.timeStep = 1000 / 60; // 60 FPS
-        
+        this.timeStep = 1000 / CONFIG.GAME.FPS;
+
         // Load first level
         this.loadLevel(this.currentLevel);
-        
+
         // Start game loop
         requestAnimationFrame(this.gameLoop.bind(this));
     }
@@ -80,8 +84,18 @@ class Game {
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             this.keys[key] = true;
+
+            // Pause toggle
+            if (key === 'p' && !this.gameOver) {
+                this.togglePause();
+                return;
+            }
+
             if ((key === 'r') && this.gameOver) {
                 window.location.reload();
+            }
+            if ((key === 'escape') && !this.gameOver) {
+                this.togglePause();
             }
             if ((key === 'z') && !this.gameOver && !this.paused) {
                 this.player.shoot();
@@ -235,28 +249,31 @@ class Game {
     
     update(deltaTime) {
         if (this.gameOver || this.paused) return;
-        
+
         // Update player
         this.player.update(deltaTime, this.keys, this.platforms);
-        
+
         // Update enemies
         this.enemies.forEach(enemy => {
             enemy.update(deltaTime, this.player, this.platforms);
         });
-        
+
         // Update projectiles
         this.projectiles.forEach(projectile => {
             projectile.update(deltaTime);
         });
-        
+
         // Update power-ups
         this.powerUps.forEach(powerUp => {
             powerUp.update(deltaTime);
         });
-        
+
+        // Update particles
+        this.particleSystem.update(deltaTime);
+
         // Check collisions
         this.checkCollisions();
-        
+
         // Remove dead enemies and projectiles
         this.cleanup();
 
@@ -266,6 +283,7 @@ class Game {
             if (this.currentLevel > LEVELS.length) {
                 this.showWinScreen();
             } else {
+                this.soundManager.playLevelComplete();
                 this.loadLevel(this.currentLevel);
             }
         }
@@ -280,11 +298,12 @@ class Game {
                     this.player.takeDamage();
                     if (this.player.health <= 0) {
                         this.gameOver = true;
+                        this.soundManager.playGameOver();
                     }
                 }
             }
         });
-        
+
         // EnemyProjectile-Player collisions
         this.projectiles.forEach(projectile => {
             if (projectile instanceof EnemyProjectile && projectile.checkCollision(this.player)) {
@@ -292,25 +311,48 @@ class Game {
                 projectile.destroy();
                 if (this.player.health <= 0) {
                     this.gameOver = true;
+                    this.soundManager.playGameOver();
                 }
             }
         });
-        
+
         // Projectile-Enemy collisions
         this.projectiles.forEach(projectile => {
-            this.enemies.forEach(enemy => {
-                if (projectile.checkCollision(enemy)) {
-                    enemy.takeDamage(projectile.damage);
-                    projectile.destroy();
-                }
-            });
+            if (!(projectile instanceof EnemyProjectile)) {
+                this.enemies.forEach(enemy => {
+                    if (projectile.checkCollision(enemy)) {
+                        const wasAlive = !enemy.isDead;
+                        enemy.takeDamage(projectile.damage);
+                        projectile.destroy();
+
+                        // Create explosion effect if enemy died
+                        if (wasAlive && enemy.isDead) {
+                            this.particleSystem.createExplosion(
+                                enemy.x + enemy.width / 2,
+                                enemy.y + enemy.height / 2,
+                                enemy.color
+                            );
+                            this.soundManager.playEnemyDeath();
+                        }
+                    }
+                });
+            }
         });
-        
+
         // Player-PowerUp collisions
         this.powerUps.forEach(powerUp => {
             if (powerUp.checkCollision(this.player)) {
                 powerUp.applyEffect(this.player, this);
                 powerUp.collected = true;
+
+                // Create power-up effect
+                const color = CONFIG.POWERUP.COLORS[powerUp.type.toUpperCase()] || '#FFD700';
+                this.particleSystem.createPowerUpEffect(
+                    powerUp.x + powerUp.width / 2,
+                    powerUp.y + powerUp.height / 2,
+                    color
+                );
+                this.soundManager.playPowerUp();
             }
         });
     }
@@ -325,40 +367,51 @@ class Game {
         // Clear canvas
         this.ctx.fillStyle = '#000';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         // Draw platforms
         this.platforms.forEach(platform => platform.draw(this.ctx));
-        
+
         // Draw power-ups
         this.powerUps.forEach(powerUp => powerUp.draw(this.ctx));
-        
+
         // Draw enemies
         this.enemies.forEach(enemy => enemy.draw(this.ctx));
-        
+
         // Draw projectiles
         this.projectiles.forEach(projectile => projectile.draw(this.ctx));
-        
+
+        // Draw particles
+        this.particleSystem.draw(this.ctx);
+
         // Draw player
         this.player.draw(this.ctx);
-        
+
         // Draw game over screen
         if (this.gameOver) {
             this.drawGameOver();
         }
     }
     
+    togglePause() {
+        this.paused = !this.paused;
+        const pauseMenu = document.getElementById('pause-menu');
+        if (pauseMenu) {
+            pauseMenu.style.display = this.paused ? 'flex' : 'none';
+        }
+    }
+
     drawGameOver() {
         this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        
+
         this.ctx.fillStyle = '#fff';
         this.ctx.font = '48px "Press Start 2P"';
         this.ctx.textAlign = 'center';
         this.ctx.fillText('GAME OVER', this.canvas.width / 2, this.canvas.height / 2 - 50);
-        
+
         this.ctx.font = '24px "Press Start 2P"';
         this.ctx.fillText('Press R or tap to Restart', this.canvas.width / 2, this.canvas.height / 2 + 50);
-        
+
         // Add restart button for mobile
         const restartBtn = document.getElementById('restart-btn');
         if (restartBtn) {
@@ -496,10 +549,14 @@ window.addEventListener('load', () => {
     const startBtn = document.getElementById('start-btn');
     const restartBtn = document.getElementById('restart-btn');
     const touchControls = document.getElementById('touch-controls');
-    
+    const resumeBtn = document.getElementById('resume-btn');
+    const restartGameBtn = document.getElementById('restart-game-btn');
+
+    let gameInstance = null;
+
     // Show touch controls on mobile devices
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    
+
     if (isMobile) {
         touchControls.style.display = 'flex';
         // Force touch controls to stay visible
@@ -510,7 +567,7 @@ window.addEventListener('load', () => {
                 }
             });
         });
-        
+
         observer.observe(touchControls, {
             attributes: true,
             attributeFilter: ['style']
@@ -518,27 +575,42 @@ window.addEventListener('load', () => {
     } else {
         touchControls.style.display = 'none';
     }
-    
+
     const startGame = () => {
         startOverlay.style.display = 'none';
         gameContainer.style.display = 'block';
         if (isMobile) {
             touchControls.style.display = 'flex';
         }
-        new Game();
+        gameInstance = new Game();
     };
-    
+
     startBtn.addEventListener('click', startGame);
-    
+
     // Add keyboard shortcut for 'S' key
     window.addEventListener('keydown', (e) => {
         if (e.key.toLowerCase() === 's' && startOverlay.style.display !== 'none') {
             startGame();
         }
     });
-    
+
     // Add restart button functionality
     restartBtn.addEventListener('click', () => {
         window.location.reload();
     });
+
+    // Pause menu buttons
+    if (resumeBtn) {
+        resumeBtn.addEventListener('click', () => {
+            if (gameInstance) {
+                gameInstance.togglePause();
+            }
+        });
+    }
+
+    if (restartGameBtn) {
+        restartGameBtn.addEventListener('click', () => {
+            window.location.reload();
+        });
+    }
 }); 

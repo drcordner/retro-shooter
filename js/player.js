@@ -52,9 +52,11 @@ class Player {
         if ((keys['ArrowUp'] || keys[' '] || keys['w'] || this.game.touchControls.jump) && !this.isJumping) {
             this.velocityY = this.jumpForce;
             this.isJumping = true;
+            this.game.soundManager.playJump();
         } else if ((keys['ArrowUp'] || keys[' '] || keys['w'] || this.game.touchControls.jump) && this.isJumping && !this.isDoubleJumping) {
             this.velocityY = this.jumpForce * 0.8;
             this.isDoubleJumping = true;
+            this.game.soundManager.playJump();
         }
         
         // Apply gravity
@@ -89,19 +91,31 @@ class Player {
         // Power-up timers
         if (this.firePower) {
             this.firePowerTimer -= deltaTime;
-            if (this.firePowerTimer <= 0) this.firePower = false;
+            if (this.firePowerTimer <= 0) {
+                this.firePower = false;
+                this.updatePowerUpDisplay();
+            }
         }
         if (this.speedBoost) {
             this.speedBoostTimer -= deltaTime;
-            if (this.speedBoostTimer <= 0) this.speedBoost = false;
+            if (this.speedBoostTimer <= 0) {
+                this.speedBoost = false;
+                this.updatePowerUpDisplay();
+            }
         }
         if (this.shield) {
             this.shieldTimer -= deltaTime;
-            if (this.shieldTimer <= 0) this.shield = false;
+            if (this.shieldTimer <= 0) {
+                this.shield = false;
+                this.updatePowerUpDisplay();
+            }
         }
         if (this.multiShot) {
             this.multiShotTimer -= deltaTime;
-            if (this.multiShotTimer <= 0) this.multiShot = false;
+            if (this.multiShotTimer <= 0) {
+                this.multiShot = false;
+                this.updatePowerUpDisplay();
+            }
         }
         
         // Invincibility timer
@@ -110,6 +124,11 @@ class Player {
             if (this.invincibleTimer <= 0) {
                 this.invincible = false;
             }
+        }
+
+        // Update power-up display every frame if any power-up is active
+        if (this.firePower || this.speedBoost || this.shield || this.multiShot) {
+            this.updatePowerUpDisplay();
         }
     }
     
@@ -134,14 +153,23 @@ class Player {
         if (this.shootCooldown <= 0) {
             const baseY = this.y + this.height / 2 - 6;
             const direction = this.facingRight ? 1 : -1;
+            const shootX = this.x + (this.facingRight ? this.width : 0);
+
             // Multi-shot
             if (this.multiShot) {
-                this.game.projectiles.push(new Projectile(this.x + (this.facingRight ? this.width : 0), baseY, direction, this.powerUpActive || this.firePower));
-                this.game.projectiles.push(new Projectile(this.x + (this.facingRight ? this.width : 0), baseY - 16, direction, this.powerUpActive || this.firePower));
-                this.game.projectiles.push(new Projectile(this.x + (this.facingRight ? this.width : 0), baseY + 16, direction, this.powerUpActive || this.firePower));
+                this.game.projectiles.push(new Projectile(shootX, baseY, direction, this.powerUpActive || this.firePower));
+                this.game.projectiles.push(new Projectile(shootX, baseY - 16, direction, this.powerUpActive || this.firePower));
+                this.game.projectiles.push(new Projectile(shootX, baseY + 16, direction, this.powerUpActive || this.firePower));
             } else {
-                this.game.projectiles.push(new Projectile(this.x + (this.facingRight ? this.width : 0), baseY, direction, this.powerUpActive || this.firePower));
+                this.game.projectiles.push(new Projectile(shootX, baseY, direction, this.powerUpActive || this.firePower));
             }
+
+            // Create muzzle flash effect
+            this.game.particleSystem.createMuzzleFlash(shootX, baseY, direction);
+
+            // Play shoot sound
+            this.game.soundManager.playShoot();
+
             this.shootCooldown = this.shootDelay;
         }
     }
@@ -158,6 +186,7 @@ class Player {
             document.getElementById('livesValue').textContent = this.health;
             this.invincible = true;
             this.invincibleTimer = this.invincibleDuration;
+            this.game.soundManager.playHit();
         }
     }
     
@@ -202,18 +231,48 @@ class Player {
     enableFire(duration = 5000) {
         this.firePower = true;
         this.firePowerTimer = duration;
+        this.updatePowerUpDisplay();
     }
     enableSpeed(duration = 5000) {
         this.speedBoost = true;
         this.speedBoostTimer = duration;
+        this.updatePowerUpDisplay();
     }
     enableShield(duration = 5000) {
         this.shield = true;
         this.shieldTimer = duration;
+        this.updatePowerUpDisplay();
     }
     enableMultiShot(duration = 5000) {
         this.multiShot = true;
         this.multiShotTimer = duration;
+        this.updatePowerUpDisplay();
+    }
+
+    updatePowerUpDisplay() {
+        const display = document.getElementById('powerups-display');
+        if (!display) return;
+
+        let html = '';
+
+        if (this.firePower) {
+            const time = Math.ceil(this.firePowerTimer / 1000);
+            html += `<div class="powerup-indicator"><div class="powerup-icon" style="background: #ff4500;"></div>Fire: ${time}s</div>`;
+        }
+        if (this.speedBoost) {
+            const time = Math.ceil(this.speedBoostTimer / 1000);
+            html += `<div class="powerup-indicator"><div class="powerup-icon" style="background: #32cd32;"></div>Speed: ${time}s</div>`;
+        }
+        if (this.shield) {
+            const time = Math.ceil(this.shieldTimer / 1000);
+            html += `<div class="powerup-indicator"><div class="powerup-icon" style="background: #8b4513;"></div>Shield: ${time}s</div>`;
+        }
+        if (this.multiShot) {
+            const time = Math.ceil(this.multiShotTimer / 1000);
+            html += `<div class="powerup-indicator"><div class="powerup-icon" style="background: #00bfff;"></div>Multi: ${time}s</div>`;
+        }
+
+        display.innerHTML = html;
     }
 }
 

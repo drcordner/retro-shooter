@@ -82,29 +82,54 @@ class Enemy {
     }
     
     updateGodzilla(dt, player, platforms) {
-        // Make slower on early levels
+        // Progressive difficulty curve for enemy speed
         let speed = this.speed;
-        if (this.game.currentLevel <= 3) speed = 40;
+        if (this.game.currentLevel === 1) {
+            speed = 20; // Very slow for tutorial
+        } else if (this.game.currentLevel === 2) {
+            speed = 30; // Still very slow
+        } else if (this.game.currentLevel === 3) {
+            speed = 50; // Slow
+        } else if (this.game.currentLevel <= 5) {
+            speed = 80; // Medium-slow
+        } else if (this.game.currentLevel <= 8) {
+            speed = 120; // Medium
+        }
+        // Level 9+ uses full speed (160)
+
         this.velocityX = speed * this.direction;
-        
+
         // Change direction if hitting a wall or platform edge
-        if (this.x <= 0 || this.x + this.width >= 640) {
+        if (this.x <= 0 || this.x + this.width >= 1280) {
             this.direction *= -1;
         }
-        
-        // Attack if player is close
-        if (Math.abs(this.x - player.x) < 100 && this.attackCooldown <= 0) {
+
+        // Attack if player is close (disabled on level 1)
+        if (this.game.currentLevel > 1 && Math.abs(this.x - player.x) < 100 && this.attackCooldown <= 0) {
             this.attack(player);
         }
     }
     
     updateDog(dt, player, platforms) {
-        // Make slower and no jumping on early levels
+        // Progressive difficulty curve for dog speed
         let speed = this.speed;
-        if (this.game.currentLevel <= 3) speed = 120;
+        if (this.game.currentLevel === 1) {
+            speed = 80; // Very slow for tutorial
+        } else if (this.game.currentLevel === 2) {
+            speed = 120; // Slow
+        } else if (this.game.currentLevel === 3) {
+            speed = 160; // Medium-slow
+        } else if (this.game.currentLevel <= 5) {
+            speed = 200; // Medium
+        } else if (this.game.currentLevel <= 8) {
+            speed = 250; // Medium-fast
+        }
+        // Level 9+ uses full speed (300)
+
         const dx = player.x - this.x;
         this.direction = dx > 0 ? 1 : -1;
         this.velocityX = speed * this.direction;
+
         // Only jump on later levels
         if (this.game.currentLevel > 3 && player.y < this.y && Math.abs(dx) < 100 && !this.isJumping) {
             this.velocityY = -800;
@@ -246,9 +271,9 @@ class EnemyProjectile {
     update(deltaTime) {
         const dt = deltaTime / 1000;
         this.x += this.speed * this.direction * dt;
-        
+
         // Destroy if off screen
-        if (this.x < -this.width || this.x > 640) {
+        if (this.x < -this.width || this.x > 1280) {
             this.destroyed = true;
         }
     }

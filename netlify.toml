@@ -1,6 +1,14 @@
 [build]
   publish = "."
 
+# Deploy preview for all branches
+[context.deploy-preview]
+  publish = "."
+
+# Branch deploys (deploy all branches)
+[context.branch-deploy]
+  publish = "."
+
 [[headers]]
   for = "/*"
   [headers.values]
