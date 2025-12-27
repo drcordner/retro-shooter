@@ -95,14 +95,29 @@ body {
 }
 
 #version {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    color: rgba(255, 255, 255, 0.5);
-    font-size: 14px;
+    position: fixed;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 12px;
     font-family: 'Press Start 2P', monospace;
-    z-index: 100;
+    z-index: 2500;
     pointer-events: none;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+@media (max-width: 768px) {
+    #version {
+        bottom: 115px;
+    }
+}
+
+@media (max-width: 480px) {
+    #version {
+        bottom: 105px;
+        font-size: 10px;
+    }
 }
 
 #title-bar {
