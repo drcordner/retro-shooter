@@ -209,18 +209,31 @@ class Enemy {
             this.isDead = true;
             console.log(`${this.type} died`);
             // Add score based on enemy type
+            let scoreGained = 0;
             switch (this.type) {
                 case 'godzilla':
-                    this.game.score += 100;
+                    scoreGained = 100;
+                    this.game.score += scoreGained;
                     break;
                 case 'dog':
-                    this.game.score += 50;
+                    scoreGained = 50;
+                    this.game.score += scoreGained;
                     break;
                 case 'boss':
-                    this.game.score += 500;
+                    scoreGained = 500;
+                    this.game.score += scoreGained;
                     break;
             }
             document.getElementById('scoreValue').textContent = this.game.score;
+
+            // Create score popup
+            if (scoreGained > 0) {
+                this.game.particleSystem.createScorePopup(
+                    this.x + this.width / 2,
+                    this.y,
+                    scoreGained
+                );
+            }
         }
     }
     

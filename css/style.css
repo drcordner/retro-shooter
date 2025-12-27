@@ -148,14 +148,14 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 15px;
-    padding-bottom: max(15px, env(safe-area-inset-bottom));
+    padding: 20px 15px;
+    padding-bottom: max(25px, calc(env(safe-area-inset-bottom) + 15px));
     z-index: 2000;
     pointer-events: auto;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.95), rgba(0, 0, 0, 0.7), transparent);
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.98), rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.5), transparent);
     -webkit-tap-highlight-color: transparent;
     touch-action: none;
-    min-height: 120px;
+    min-height: 140px;
 }
 
 .movement-controls,
@@ -321,13 +321,13 @@ body {
 
 @media (max-width: 768px) {
     .game-container {
-        padding-bottom: 180px;
+        padding-bottom: 200px;
     }
 }
 
 @media (max-width: 480px) {
     .game-container {
-        padding-bottom: 160px;
+        padding-bottom: 180px;
     }
 }
 
