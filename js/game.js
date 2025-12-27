@@ -13,6 +13,10 @@ class Game {
         this.currentLevel = 1;
         this.gameOver = false;
         this.paused = false;
+        this.levelTransitioning = false;
+        this.damageFlash = 0;
+        this.levelTransitionMessage = '';
+        this.levelTransitionAlpha = 0;
 
         // Initialize game objects
         this.player = new Player(this);
@@ -278,13 +282,18 @@ class Game {
         this.cleanup();
 
         // Advance to next level if all enemies are defeated
-        if (this.enemies.length === 0) {
+        if (this.enemies.length === 0 && !this.levelTransitioning) {
+            this.levelTransitioning = true;
             this.currentLevel++;
             if (this.currentLevel > LEVELS.length) {
                 this.showWinScreen();
             } else {
                 this.soundManager.playLevelComplete();
-                this.loadLevel(this.currentLevel);
+                this.showLevelTransition();
+                setTimeout(() => {
+                    this.loadLevel(this.currentLevel);
+                    this.levelTransitioning = false;
+                }, 1500);
             }
         }
     }
@@ -386,6 +395,25 @@ class Game {
         // Draw player
         this.player.draw(this.ctx);
 
+        // Draw damage flash
+        if (this.damageFlash > 0) {
+            this.ctx.fillStyle = `rgba(255, 0, 0, ${this.damageFlash})`;
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+
+        // Draw level transition message
+        if (this.levelTransitionMessage && this.levelTransitionAlpha > 0) {
+            this.ctx.save();
+            this.ctx.globalAlpha = this.levelTransitionAlpha;
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.fillStyle = '#fff';
+            this.ctx.font = '64px "Press Start 2P"';
+            this.ctx.textAlign = 'center';
+            this.ctx.fillText(this.levelTransitionMessage, this.canvas.width / 2, this.canvas.height / 2);
+            this.ctx.restore();
+        }
+
         // Draw game over screen
         if (this.gameOver) {
             this.drawGameOver();
@@ -428,7 +456,33 @@ class Game {
         this.ctx.textAlign = 'center';
         this.ctx.fillText('YOU WIN!', this.canvas.width / 2, this.canvas.height / 2);
     }
-    
+
+    showLevelTransition() {
+        this.levelTransitionMessage = `LEVEL ${this.currentLevel}`;
+        this.levelTransitionAlpha = 1;
+
+        // Fade out the message
+        const fadeInterval = setInterval(() => {
+            this.levelTransitionAlpha -= 0.05;
+            if (this.levelTransitionAlpha <= 0) {
+                this.levelTransitionAlpha = 0;
+                this.levelTransitionMessage = '';
+                clearInterval(fadeInterval);
+            }
+        }, 50);
+    }
+
+    flashDamage() {
+        this.damageFlash = 0.5;
+        const flashInterval = setInterval(() => {
+            this.damageFlash -= 0.05;
+            if (this.damageFlash <= 0) {
+                this.damageFlash = 0;
+                clearInterval(flashInterval);
+            }
+        }, 30);
+    }
+
     gameLoop(currentTime) {
         if (!this.lastTime) this.lastTime = currentTime;
         

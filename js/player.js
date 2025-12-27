@@ -187,6 +187,7 @@ class Player {
             this.invincible = true;
             this.invincibleTimer = this.invincibleDuration;
             this.game.soundManager.playHit();
+            this.game.flashDamage();
         }
     }
     
