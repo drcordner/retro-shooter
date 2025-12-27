@@ -183,4 +183,68 @@ const LEVELS = [
             { type: 'boss', x: 800, y: 560 }
         ]
     }
-]; 
+];
+
+// Generate additional levels procedurally (levels 11-100)
+function generateLevel(levelNum) {
+    const platforms = [new Platform(0, 800, 1280, 160)]; // Always include ground
+    const enemies = [];
+    const powerUps = [];
+
+    // Difficulty scaling
+    const difficulty = Math.min(levelNum / 100, 1);
+    const enemyCount = Math.floor(3 + difficulty * 5);
+    const platformCount = Math.floor(4 + difficulty * 4);
+
+    // Generate platforms with variation
+    for (let i = 0; i < platformCount; i++) {
+        const x = getRandomInt(50, 1100);
+        const y = getRandomInt(300, 700);
+        const width = getRandomInt(120, 220);
+        platforms.push(new Platform(x, y, width, 40));
+    }
+
+    // Generate enemies based on level
+    for (let i = 0; i < enemyCount; i++) {
+        const platformIndex = getRandomInt(0, platforms.length - 1);
+        const platform = platforms[platformIndex];
+        const x = getRandomInt(platform.x + 50, Math.min(platform.x + platform.width - 100, 1180));
+        const y = platform.y - 130;
+
+        // Enemy type based on level
+        let type;
+        if (levelNum % 10 === 0) {
+            // Boss every 10 levels
+            type = 'boss';
+        } else if (levelNum > 50 && Math.random() < 0.3) {
+            type = 'boss';
+        } else if (Math.random() < 0.6) {
+            type = 'godzilla';
+        } else {
+            type = 'dog';
+        }
+
+        enemies.push({ type, x, y });
+    }
+
+    // Add power-ups (1-2 per level)
+    const powerUpTypes = ['banana', 'golden_banana', 'fire_flower', 'speed_vine', 'shield_coconut', 'multi_shot'];
+    const powerUpCount = getRandomInt(1, 2);
+
+    for (let i = 0; i < powerUpCount; i++) {
+        const platformIndex = getRandomInt(1, platforms.length - 1);
+        const platform = platforms[platformIndex];
+        const x = getRandomInt(platform.x + 20, platform.x + platform.width - 50);
+        const y = platform.y - 50;
+        const type = powerUpTypes[getRandomInt(0, powerUpTypes.length - 1)];
+
+        powerUps.push({ type, x, y });
+    }
+
+    return { platforms, enemies, powerUps };
+}
+
+// Generate levels 11-100
+for (let i = 11; i <= 100; i++) {
+    LEVELS.push(generateLevel(i));
+} 
