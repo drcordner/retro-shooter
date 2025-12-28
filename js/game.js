@@ -634,17 +634,15 @@ class PowerUp {
 
         switch (this.type) {
             case 'banana':
-                // Draw banana shape
+                // Draw banana shape as rounded rect
                 ctx.fillStyle = '#ffe135';
-                ctx.beginPath();
-                ctx.ellipse(this.x + 16, this.y + 16, 14, 8, Math.PI / 6, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(this.x + 6, this.y + 10, 20, 14);
                 ctx.strokeStyle = '#b8860b';
                 ctx.lineWidth = 2;
-                ctx.stroke();
+                ctx.strokeRect(this.x + 6, this.y + 10, 20, 14);
                 // Add banana stem
                 ctx.fillStyle = '#654321';
-                ctx.fillRect(this.x + 12, this.y + 8, 4, 6);
+                ctx.fillRect(this.x + 14, this.y + 6, 4, 6);
                 break;
 
             case 'golden_banana':
@@ -652,16 +650,15 @@ class PowerUp {
                 ctx.shadowColor = '#ffd700';
                 ctx.shadowBlur = 15;
                 ctx.fillStyle = '#ffd700';
-                ctx.beginPath();
-                ctx.ellipse(this.x + 16, this.y + 16, 15, 9, Math.PI / 6, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.fillRect(this.x + 6, this.y + 10, 20, 14);
                 ctx.shadowBlur = 0;
                 ctx.strokeStyle = '#ff8c00';
                 ctx.lineWidth = 2;
-                ctx.stroke();
+                ctx.strokeRect(this.x + 6, this.y + 10, 20, 14);
                 // Add sparkle effect
                 ctx.fillStyle = '#fff';
                 ctx.fillRect(this.x + 20, this.y + 12, 3, 3);
+                ctx.fillRect(this.x + 10, this.y + 18, 2, 2);
                 break;
 
             case 'fire_flower':
