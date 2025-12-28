@@ -23,18 +23,19 @@ class Platform {
         ctx.fillStyle = '#3d2817';
         ctx.fillRect(this.x, this.y + this.height - 3, this.width, 3);
 
-        // Draw brick pattern for wider platforms
+        // Draw simple texture lines for wider platforms
         if (this.width > 100 && this.height > 30) {
             ctx.strokeStyle = '#6b4423';
             ctx.lineWidth = 1;
-            const brickWidth = 40;
-            const brickHeight = 20;
-            for (let bx = this.x; bx < this.x + this.width; bx += brickWidth) {
-                for (let by = this.y + this.height * 0.15; by < this.y + this.height - 3; by += brickHeight) {
-                    const offset = (Math.floor((by - this.y) / brickHeight) % 2) * (brickWidth / 2);
-                    ctx.strokeRect(bx + offset, by, brickWidth, brickHeight);
-                }
+            ctx.beginPath();
+            // Draw horizontal lines
+            const lineSpacing = 15;
+            for (let i = 1; i < this.height / lineSpacing; i++) {
+                const y = this.y + i * lineSpacing;
+                ctx.moveTo(this.x, y);
+                ctx.lineTo(this.x + this.width, y);
             }
+            ctx.stroke();
         }
     }
 }
