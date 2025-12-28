@@ -91,16 +91,61 @@ class ParticleSystem {
         this.particles.push(new Particle(x, y, 0, 0, color, 3, 200));
     }
 
+    createScorePopup(x, y, score) {
+        const popup = {
+            x: x,
+            y: y,
+            score: score,
+            life: 1000,
+            maxLife: 1000,
+            velocityY: -100,
+            destroyed: false,
+            update: function(deltaTime) {
+                const dt = deltaTime / 1000;
+                this.y += this.velocityY * dt;
+                this.life -= deltaTime;
+                if (this.life <= 0) {
+                    this.destroyed = true;
+                }
+            },
+            draw: function(ctx) {
+                const alpha = this.life / this.maxLife;
+                ctx.save();
+                ctx.globalAlpha = alpha;
+                ctx.fillStyle = '#FFD700';
+                ctx.font = 'bold 24px Arial';
+                ctx.textAlign = 'center';
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 3;
+                ctx.strokeText(`+${this.score}`, this.x, this.y);
+                ctx.fillText(`+${this.score}`, this.x, this.y);
+                ctx.restore();
+            }
+        };
+        this.scorePopups = this.scorePopups || [];
+        this.scorePopups.push(popup);
+    }
+
     update(deltaTime) {
         this.particles.forEach(particle => particle.update(deltaTime));
         this.particles = this.particles.filter(particle => !particle.destroyed);
+
+        if (this.scorePopups) {
+            this.scorePopups.forEach(popup => popup.update(deltaTime));
+            this.scorePopups = this.scorePopups.filter(popup => !popup.destroyed);
+        }
     }
 
     draw(ctx) {
         this.particles.forEach(particle => particle.draw(ctx));
+
+        if (this.scorePopups) {
+            this.scorePopups.forEach(popup => popup.draw(ctx));
+        }
     }
 
     clear() {
         this.particles = [];
+        this.scorePopups = [];
     }
 }

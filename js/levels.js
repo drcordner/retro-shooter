@@ -5,10 +5,37 @@ class Platform {
         this.width = width;
         this.height = height;
     }
-    
+
     draw(ctx) {
-        ctx.fillStyle = '#8B4513';
+        // Draw main platform body with gradient
+        const gradient = ctx.createLinearGradient(this.x, this.y, this.x, this.y + this.height);
+        gradient.addColorStop(0, '#a0522d');
+        gradient.addColorStop(0.5, '#8b4513');
+        gradient.addColorStop(1, '#654321');
+        ctx.fillStyle = gradient;
         ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        // Draw top edge highlight
+        ctx.fillStyle = '#cd853f';
+        ctx.fillRect(this.x, this.y, this.width, Math.max(3, this.height * 0.15));
+
+        // Draw bottom shadow
+        ctx.fillStyle = '#3d2817';
+        ctx.fillRect(this.x, this.y + this.height - 3, this.width, 3);
+
+        // Draw brick pattern for wider platforms
+        if (this.width > 100 && this.height > 30) {
+            ctx.strokeStyle = '#6b4423';
+            ctx.lineWidth = 1;
+            const brickWidth = 40;
+            const brickHeight = 20;
+            for (let bx = this.x; bx < this.x + this.width; bx += brickWidth) {
+                for (let by = this.y + this.height * 0.15; by < this.y + this.height - 3; by += brickHeight) {
+                    const offset = (Math.floor((by - this.y) / brickHeight) % 2) * (brickWidth / 2);
+                    ctx.strokeRect(bx + offset, by, brickWidth, brickHeight);
+                }
+            }
+        }
     }
 }
 

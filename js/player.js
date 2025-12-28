@@ -10,7 +10,7 @@ class Player {
         this.speed = 400;
         this.jumpForce = -800;
         this.gravity = 1600;
-        this.health = 3;
+        this.health = 5;
         this.isJumping = false;
         this.isDoubleJumping = false;
         this.facingRight = true;
@@ -187,6 +187,7 @@ class Player {
             this.invincible = true;
             this.invincibleTimer = this.invincibleDuration;
             this.game.soundManager.playHit();
+            this.game.flashDamage();
         }
     }
     
@@ -198,27 +199,65 @@ class Player {
     }
     
     draw(ctx) {
-        // Draw player body
+        ctx.save();
+
+        // Invincibility glow
         if (this.invincible) {
-            ctx.save();
             ctx.shadowColor = '#fff';
-            ctx.shadowBlur = 32;
+            ctx.shadowBlur = 20;
         }
-        ctx.fillStyle = this.powerUpActive ? '#ff0' : '#8b4513';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        if (this.invincible) {
-            ctx.restore();
-        }
-        
-        // Draw face
-        ctx.fillStyle = '#000';
+
+        // Body color
+        const bodyColor = this.powerUpActive ? '#FFD700' : '#8B4513';
+        const darkColor = this.powerUpActive ? '#FFA500' : '#654321';
+
+        // Draw body with gradient effect (multiple rectangles for depth)
+        ctx.fillStyle = darkColor;
+        ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, this.height - 4);
+
+        ctx.fillStyle = bodyColor;
+        ctx.fillRect(this.x, this.y, this.width, this.height - 4);
+
+        // Draw chest (lighter belly area)
+        ctx.fillStyle = this.powerUpActive ? '#FFFF00' : '#D2691E';
+        ctx.fillRect(this.x + this.width * 0.25, this.y + this.height * 0.4, this.width * 0.5, this.height * 0.4);
+
+        // Draw arms
+        ctx.fillStyle = bodyColor;
         if (this.facingRight) {
-            ctx.fillRect(this.x + 20, this.y + 10, 8, 8); // eye
-            ctx.fillRect(this.x + 20, this.y + 25, 8, 4); // mouth
+            ctx.fillRect(this.x - 8, this.y + 30, 12, 40);
+            ctx.fillRect(this.x + this.width - 4, this.y + 30, 12, 40);
         } else {
-            ctx.fillRect(this.x + 4, this.y + 10, 8, 8); // eye
-            ctx.fillRect(this.x + 4, this.y + 25, 8, 4); // mouth
+            ctx.fillRect(this.x - 8, this.y + 30, 12, 40);
+            ctx.fillRect(this.x + this.width - 4, this.y + 30, 12, 40);
         }
+
+        // Draw head area (top 1/3 of body)
+        ctx.fillStyle = bodyColor;
+        ctx.fillRect(this.x + 8, this.y, this.width - 16, 32);
+
+        // Draw eyes
+        ctx.fillStyle = '#FFF';
+        if (this.facingRight) {
+            ctx.fillRect(this.x + 35, this.y + 12, 12, 12);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(this.x + 40, this.y + 15, 6, 6);
+        } else {
+            ctx.fillRect(this.x + 17, this.y + 12, 12, 12);
+            ctx.fillStyle = '#000';
+            ctx.fillRect(this.x + 18, this.y + 15, 6, 6);
+        }
+
+        // Draw shield effect if active
+        if (this.shield) {
+            ctx.strokeStyle = '#00BFFF';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(this.x + this.width / 2, this.y + this.height / 2, this.width * 0.7, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        ctx.restore();
     }
     
     heal(amount = 1) {
@@ -288,9 +327,18 @@ class Projectile {
         this.damage = poweredUp ? 2 : 1;
         this.destroyed = false;
         this.color = poweredUp ? '#FFD700' : '#FFFF00';
+        this.poweredUp = poweredUp;
+        this.trail = [];
+        this.trailLength = 5;
     }
 
     update(deltaTime) {
+        // Add current position to trail
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > this.trailLength) {
+            this.trail.shift();
+        }
+
         const dt = deltaTime / 1000;
         this.x += this.speed * this.direction * dt;
         // Remove if off screen
@@ -307,8 +355,36 @@ class Projectile {
     }
 
     draw(ctx) {
+        ctx.save();
+
+        // Draw trail
+        this.trail.forEach((pos, index) => {
+            const alpha = (index + 1) / this.trail.length * 0.5;
+            const size = (index + 1) / this.trail.length;
+            ctx.fillStyle = this.poweredUp ? `rgba(255, 215, 0, ${alpha})` : `rgba(255, 255, 0, ${alpha})`;
+            ctx.fillRect(
+                pos.x + this.width * (1 - size) / 2,
+                pos.y + this.height * (1 - size) / 2,
+                this.width * size,
+                this.height * size
+            );
+        });
+
+        // Draw main projectile with glow
+        if (this.poweredUp) {
+            ctx.shadowColor = this.color;
+            ctx.shadowBlur = 10;
+        }
+
+        // Main projectile body
         ctx.fillStyle = this.color;
         ctx.fillRect(this.x, this.y, this.width, this.height);
+
+        // Add highlight
+        ctx.fillStyle = this.poweredUp ? '#FFFF00' : '#FFFFFF';
+        ctx.fillRect(this.x + 2, this.y + 2, this.width - 4, 4);
+
+        ctx.restore();
     }
 
     destroy() {
