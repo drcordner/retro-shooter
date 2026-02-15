@@ -73,10 +73,11 @@ class Player {
         // Platform collision
         this.handlePlatformCollisions(platforms);
         
-        // Screen boundaries
-        if (this.x < 0) this.x = 0;
-        if (this.x + this.width > this.game.canvas.width) {
+        // Screen wrap: teleport to the opposite side at horizontal edges
+        if (this.x <= 0) {
             this.x = this.game.canvas.width - this.width;
+        } else if (this.x + this.width >= this.game.canvas.width) {
+            this.x = 0;
         }
         
         // Update shoot cooldown
