@@ -8,6 +8,7 @@ class Player {
         this.velocityX = 0;
         this.velocityY = 0;
         this.speed = 400;
+        this.baseSpeed = this.speed;
         this.jumpForce = -800;
         this.gravity = 1600;
         this.health = 5;
@@ -36,12 +37,15 @@ class Player {
     update(deltaTime, keys, platforms) {
         // Convert deltaTime to seconds
         const dt = deltaTime / 1000;
+
+        const moveSpeed = this.speedBoost ? this.baseSpeed * 1.5 : this.baseSpeed;
+        this.speed = moveSpeed;
         
         // Handle horizontal movement (keyboard and touch)
-        if (keys['ArrowLeft'] || keys['a'] || this.game.touchControls.left) {
+        if (keys['arrowleft'] || keys['a'] || this.game.touchControls.left) {
             this.velocityX = -this.speed;
             this.facingRight = false;
-        } else if (keys['ArrowRight'] || keys['d'] || this.game.touchControls.right) {
+        } else if (keys['arrowright'] || keys['d'] || this.game.touchControls.right) {
             this.velocityX = this.speed;
             this.facingRight = true;
         } else {
@@ -49,11 +53,11 @@ class Player {
         }
         
         // Handle jumping (keyboard and touch)
-        if ((keys['ArrowUp'] || keys[' '] || keys['w'] || this.game.touchControls.jump) && !this.isJumping) {
+        if ((keys['arrowup'] || keys[' '] || keys['spacebar'] || keys['w'] || this.game.touchControls.jump) && !this.isJumping) {
             this.velocityY = this.jumpForce;
             this.isJumping = true;
             this.game.soundManager.playJump();
-        } else if ((keys['ArrowUp'] || keys[' '] || keys['w'] || this.game.touchControls.jump) && this.isJumping && !this.isDoubleJumping) {
+        } else if ((keys['arrowup'] || keys[' '] || keys['spacebar'] || keys['w'] || this.game.touchControls.jump) && this.isJumping && !this.isDoubleJumping) {
             this.velocityY = this.jumpForce * 0.8;
             this.isDoubleJumping = true;
             this.game.soundManager.playJump();
@@ -183,12 +187,26 @@ class Player {
         if (this.shield || this.invincible) return;
         if (!this.powerUpActive) {
             this.health -= amount;
+            if (this.health <= 0 && this.extraLives > 0) {
+                this.extraLives -= 1;
+                this.health = this.maxHealth;
+            }
+
             document.getElementById('livesValue').textContent = this.health;
             this.invincible = true;
             this.invincibleTimer = this.invincibleDuration;
             this.game.soundManager.playHit();
             this.game.flashDamage();
         }
+    }
+
+    resetForLevel() {
+        this.x = 100;
+        this.y = 800;
+        this.velocityX = 0;
+        this.velocityY = 0;
+        this.isJumping = false;
+        this.isDoubleJumping = false;
     }
     
     checkCollision(enemy) {
