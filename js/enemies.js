@@ -10,6 +10,7 @@ class Enemy {
         this.velocityY = 0;
         this.speed = 100;
         this.health = 1;
+        this.maxHealth = this.health;
         this.isDead = false;
         this.direction = -1; // -1 for left, 1 for right
         this.attackCooldown = 0;
@@ -45,6 +46,8 @@ class Enemy {
             default:
                 this.color = '#FF0000';
         }
+
+        this.maxHealth = this.health;
     }
     
     update(deltaTime, player, platforms) {
@@ -216,10 +219,8 @@ class Enemy {
     
     takeDamage(amount) {
         this.health -= amount;
-        console.log(`${this.type} took ${amount} damage, health now ${this.health}`);
         if (this.health <= 0) {
             this.isDead = true;
-            console.log(`${this.type} died`);
             // Add score based on enemy type
             let scoreGained = 0;
             switch (this.type) {
@@ -315,8 +316,8 @@ class Enemy {
         }
 
         // Draw health bar for bosses and damaged enemies
-        if (this.type === 'boss' || this.health < this.setupEnemyType().health) {
-            const healthPercent = this.health / (this.type === 'boss' ? 10 : (this.type === 'godzilla' ? 3 : 1));
+        if (this.type === 'boss' || this.health < this.maxHealth) {
+            const healthPercent = this.health / this.maxHealth;
             ctx.fillStyle = '#000';
             ctx.fillRect(this.x, this.y - 10, this.width, 6);
             ctx.fillStyle = healthPercent > 0.5 ? '#0F0' : (healthPercent > 0.25 ? '#FF0' : '#F00');

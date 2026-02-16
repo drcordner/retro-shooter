@@ -227,7 +227,7 @@ function generateLevel(levelNum) {
     // Generate platforms with variation
     for (let i = 0; i < platformCount; i++) {
         const x = getRandomInt(50, 1100);
-        const y = getRandomInt(300, 700);
+        const y = getRandomInt(420, 700);
         const width = getRandomInt(120, 220);
         platforms.push(new Platform(x, y, width, 40));
     }
@@ -276,3 +276,50 @@ function generateLevel(levelNum) {
 for (let i = 11; i <= 100; i++) {
     LEVELS.push(generateLevel(i));
 } 
+
+const LEVEL_ACCESSIBILITY = {
+    GROUND_Y: 800,
+    MAX_VERTICAL_STEP: 200,
+    HELPER_MIN_WIDTH: 140,
+    HELPER_MAX_WIDTH: 220,
+    HELPER_HEIGHT: 32
+};
+
+function clampLevelX(x, width) {
+    return Math.max(0, Math.min(1280 - width, x));
+}
+
+function addHelperPlatform(level, x, y, width) {
+    const exists = level.platforms.some(platform =>
+        platform.x === x &&
+        platform.y === y &&
+        platform.width === width
+    );
+
+    if (!exists) {
+        level.platforms.push(new Platform(x, y, width, LEVEL_ACCESSIBILITY.HELPER_HEIGHT));
+    }
+}
+
+function ensurePlatformReachability(level) {
+    const elevatedPlatforms = level.platforms.filter(platform => platform.y < LEVEL_ACCESSIBILITY.GROUND_Y);
+
+    elevatedPlatforms.forEach(platform => {
+        let currentY = LEVEL_ACCESSIBILITY.GROUND_Y;
+
+        while (currentY - platform.y > LEVEL_ACCESSIBILITY.MAX_VERTICAL_STEP) {
+            currentY -= LEVEL_ACCESSIBILITY.MAX_VERTICAL_STEP;
+            const helperWidth = Math.max(
+                LEVEL_ACCESSIBILITY.HELPER_MIN_WIDTH,
+                Math.min(LEVEL_ACCESSIBILITY.HELPER_MAX_WIDTH, platform.width)
+            );
+            const helperX = Math.round(clampLevelX(platform.x + (platform.width - helperWidth) / 2, helperWidth));
+            addHelperPlatform(level, helperX, currentY, helperWidth);
+        }
+    });
+}
+
+// Accessibility pass: ensure all elevated platforms (and their collectibles) are reachable
+LEVELS.forEach(level => {
+    ensurePlatformReachability(level);
+});

@@ -180,7 +180,6 @@ class Game {
             e.preventDefault();
             e.stopPropagation();
             this.touchControls.left = true;
-            console.log('Left button pressed');
             vibrate(50);
         });
         
@@ -188,7 +187,6 @@ class Game {
             e.preventDefault();
             e.stopPropagation();
             this.touchControls.left = false;
-            console.log('Left button released');
         });
         
         // Right button
@@ -196,7 +194,6 @@ class Game {
             e.preventDefault();
             e.stopPropagation();
             this.touchControls.right = true;
-            console.log('Right button pressed');
             vibrate(50);
         });
         
@@ -204,7 +201,6 @@ class Game {
             e.preventDefault();
             e.stopPropagation();
             this.touchControls.right = false;
-            console.log('Right button released');
         });
         
         // Jump button
@@ -212,7 +208,6 @@ class Game {
             e.preventDefault();
             e.stopPropagation();
             this.touchControls.jump = true;
-            console.log('Jump button pressed');
             vibrate(50);
         });
         
@@ -220,7 +215,6 @@ class Game {
             e.preventDefault();
             e.stopPropagation();
             this.touchControls.jump = false;
-            console.log('Jump button released');
         });
         
         // Shoot button
@@ -230,7 +224,6 @@ class Game {
             this.touchControls.shoot = true;
             if (!this.gameOver && !this.paused) {
                 this.player.shoot();
-                console.log('Shoot button pressed');
                 vibrate(50);
             }
         });
@@ -239,7 +232,6 @@ class Game {
             e.preventDefault();
             e.stopPropagation();
             this.touchControls.shoot = false;
-            console.log('Shoot button released');
         });
         
         // Prevent default touch behavior on game canvas
@@ -256,7 +248,6 @@ class Game {
                 this.touchControls.right = false;
                 this.touchControls.jump = false;
                 this.touchControls.shoot = false;
-                console.log('Touch cancelled');
             });
         });
     }
@@ -288,6 +279,9 @@ class Game {
         (levelData.powerUps || []).forEach(powerUp => {
             this.powerUps.push(new PowerUp(powerUp.type, powerUp.x, powerUp.y, this));
         });
+
+        // Reset player for a clean level start
+        this.player.resetForLevel();
         
         // Update UI
         document.getElementById('levelValue').textContent = levelNumber;
@@ -380,7 +374,7 @@ class Game {
         this.projectiles.forEach(projectile => {
             if (!(projectile instanceof EnemyProjectile)) {
                 this.enemies.forEach(enemy => {
-                    if (projectile.checkCollision(enemy)) {
+                    if (!projectile.destroyed && projectile.checkCollision(enemy)) {
                         const wasAlive = !enemy.isDead;
                         enemy.takeDamage(projectile.damage);
                         projectile.destroy();
