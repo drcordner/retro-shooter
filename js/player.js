@@ -14,6 +14,7 @@ class Player {
         this.health = 5;
         this.isJumping = false;
         this.isDoubleJumping = false;
+        this.jumpHeld = false;
         this.facingRight = true;
         this.shootCooldown = 0;
         this.shootDelay = 250; // milliseconds between shots
@@ -62,6 +63,8 @@ class Player {
             this.isDoubleJumping = true;
             this.game.soundManager.playJump();
         }
+
+        this.jumpHeld = jumpPressed;
         
         // Apply gravity
         this.velocityY += this.gravity * dt;
