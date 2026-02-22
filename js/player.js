@@ -53,30 +53,18 @@ class Player {
             this.velocityX = 0;
         }
         
-        // Handle jumping (keyboard and touch) with press detection.
-        // This prevents accidental instant double-jump from holding the jump key.
-        const wasJumpHeld = this.jumpHeld;
-        const jumpNow = Boolean(
-            keys['arrowup'] ||
-            keys[' '] ||
-            keys['spacebar'] ||
-            keys['w'] ||
-            this.game.touchControls.jump
-        );
-
-        if (jumpNow && !wasJumpHeld) {
-            if (!this.isJumping) {
-                this.velocityY = this.jumpForce;
-                this.isJumping = true;
-                this.game.soundManager.playJump();
-            } else if (!this.isDoubleJumping) {
-                this.velocityY = this.jumpForce * 0.95;
-                this.isDoubleJumping = true;
-                this.game.soundManager.playJump();
-            }
+        // Handle jumping (keyboard and touch)
+        if ((keys['arrowup'] || keys[' '] || keys['spacebar'] || keys['w'] || this.game.touchControls.jump) && !this.isJumping) {
+            this.velocityY = this.jumpForce;
+            this.isJumping = true;
+            this.game.soundManager.playJump();
+        } else if ((keys['arrowup'] || keys[' '] || keys['spacebar'] || keys['w'] || this.game.touchControls.jump) && this.isJumping && !this.isDoubleJumping) {
+            this.velocityY = this.jumpForce * 0.8;
+            this.isDoubleJumping = true;
+            this.game.soundManager.playJump();
         }
 
-        this.jumpHeld = jumpNow;
+        this.jumpHeld = jumpPressed;
         
         // Apply gravity
         this.velocityY += this.gravity * dt;
@@ -223,7 +211,6 @@ class Player {
         this.velocityY = 0;
         this.isJumping = false;
         this.isDoubleJumping = false;
-        this.jumpHeld = false;
     }
     
     checkCollision(enemy) {
