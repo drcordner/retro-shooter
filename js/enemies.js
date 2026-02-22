@@ -104,9 +104,16 @@ class Enemy {
 
         this.velocityX = speed * this.direction;
 
-        // Change direction if hitting a wall or platform edge
-        if (this.x <= 0 || this.x + this.width >= 1280) {
-            this.direction *= -1;
+        // Turn around cleanly at screen edges (avoid jitter/stalling at the boundary)
+        const edgeBuffer = 2;
+        if (this.x <= 0) {
+            this.x = edgeBuffer;
+            this.direction = 1;
+            this.velocityX = speed;
+        } else if (this.x + this.width >= 1280) {
+            this.x = 1280 - this.width - edgeBuffer;
+            this.direction = -1;
+            this.velocityX = -speed;
         }
 
         // Attack if player is close (disabled on level 1)
